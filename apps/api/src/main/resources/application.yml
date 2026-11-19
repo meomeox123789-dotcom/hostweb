@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: bvmk-api
+  datasource:
+    url: ${BVMK_DATABASE_URL:jdbc:postgresql://localhost:5432/bvmk}
+    username: ${BVMK_DATABASE_USERNAME:bvmk}
+    password: ${BVMK_DATABASE_PASSWORD:bvmk_local_only}
+    hikari:
+      maximum-pool-size: ${BVMK_DB_POOL_SIZE:10}
+      minimum-idle: 2
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: ${BVMK_REDIS_HOST:localhost}
+      port: ${BVMK_REDIS_PORT:6379}
+      password: ${BVMK_REDIS_PASSWORD:}
+  jackson:
+    time-zone: Asia/Ho_Chi_Minh
+bvmk:
+  web:
+    allowed-origins: ${BVMK_ALLOWED_ORIGINS:http://localhost:3000}
+  booking:
+    hold-cleanup-ms: ${BVMK_HOLD_CLEANUP_MS:60000}
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  info:
+    env:
+      enabled: true
+info:
+  app:
+    name: BÉ VUI MẸ KHOẺ API
+    version: 1.0.0-SNAPSHOT
+    description: Modular backend for family spa and kids playground
+logging:
+  level:
+    vn.bevuimekhoe: INFO
+    org.springframework.security: WARN

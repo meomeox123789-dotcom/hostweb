@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/
+*.iml
+apps/api/target/
+*.log
+run-web.bat

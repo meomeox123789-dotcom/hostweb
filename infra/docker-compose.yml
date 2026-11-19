@@ -1,0 +1,78 @@
+name: bvmk-local
+services:
+  postgres:
+    image: postgres:18
+    container_name: bvmk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bvmk
+      POSTGRES_USER: bvmk
+      POSTGRES_PASSWORD: bvmk_local_only
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5432:5432"
+    volumes:
+      - bvmk-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bvmk -d bvmk"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:8.2-alpine
+    container_name: bvmk-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - bvmk-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile
+    container_name: bvmk-api
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      BVMK_DATABASE_URL: jdbc:postgresql://postgres:5432/bvmk
+      BVMK_DATABASE_USERNAME: bvmk
+      BVMK_DATABASE_PASSWORD: bvmk_local_only
+      BVMK_REDIS_HOST: redis
+      BVMK_REDIS_PORT: 6379
+      BVMK_ALLOWED_ORIGINS: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8080/api/v1
+        NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    container_name: bvmk-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+volumes:
+  bvmk-postgres-data:
+  bvmk-redis-data:

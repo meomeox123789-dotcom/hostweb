@@ -1,0 +1,13 @@
+FROM maven:3.9.12-eclipse-temurin-25 AS build
+WORKDIR /workspace
+COPY pom.xml .
+COPY src ./src
+RUN mvn -B -DskipTests package
+
+FROM eclipse-temurin:25-jre
+WORKDIR /app
+RUN useradd --system --uid 10001 --create-home appuser
+COPY --from=build /workspace/target/bvmk-api-1.0.0-SNAPSHOT.jar app.jar
+USER appuser
+EXPOSE 8080
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]
